@@ -1,0 +1,39 @@
+img.logo{
+	max-height : 10em;
+	max-width : 10em
+}
+
+body{
+	padding : 2em 2em 2em 2em;
+}
+
+nav{
+	margin-bottom:1em;
+
+}
+div.w3-card-4{
+	margin-top:1em;
+	margin-bottom:1em;
+}
+/*legend{
+	width : 100%;
+	font-size : 1.5em;
+	padding : 1em 1em 1em 1em;
+}*/
+
+fieldset{
+	border:none;
+}
+
+input[type="file"]{
+	padding:2em 2em 2em 2em;
+}
+
+.date{
+	font-family:Consolas,"courier new";
+	width : 11em;
+}
+
+td{
+	vertical-align: middle;
+}
