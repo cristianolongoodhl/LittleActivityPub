@@ -1,6 +1,7 @@
 <?php
-if (!isset($_POST['newusername'])) die('Username field missing');
+if (!isset($_POST['newusername']) || !isset($_POST['publickey'])) die('Some field missing');
 $newusername = $_POST['newusername'];
+$publickey = $_POST['publickey'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,8 +26,12 @@ $newusername = $_POST['newusername'];
 					<label for="captcha">Insert the text contained in the
 						following image</label> <img src="captcha.php" /> <input
 						type="text" class="w3-border" name="captcha" size="5"
-						maxlength="5" required /> <input type="hidden" name="newusername"
-						value="<?=$newusername?>" /> <input type="submit"
+						maxlength="5" required /> 
+						<input type="hidden" name="newusername"
+						value="<?=$newusername?>" /> 
+						<input type="hidden" name="publickey"
+						value="<?=$publickey?>" /> 
+						<input type="submit"
 						name="createAccount" value="Create Account"
 						class="w3-btn w3-teal " />
 				</p>

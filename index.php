@@ -36,7 +36,6 @@ function getAllUserNames()
 </head>
 <body>
 	<h1>Just a Little Activity Pub Server</h1>
-
 	<div class="w3-container w3-card-4">
 		<p>
 			This is a minimal and incomplete implementation of the server part of
@@ -61,9 +60,37 @@ function getAllUserNames()
 			<p>Feel free to create a new account to start experimenting with the
 				ActivityPub protocol.</p>
 			<form action="create-account-captcha.php" method="POST">
-				<label for="newusername">Enter the <em>username</em> for your <a
-					href="https://www.w3.org/TR/activitypub/#actor-objects">Actor</a> <input
-					type="text" name="newusername" class="w3-input w3-border" /></label>
+
+				<p>
+					<label for="newusername">Enter the <em>username</em> for your <a
+						href="https://www.w3.org/TR/activitypub/#actor-objects">Actor</a></label>
+					<input type="text" name="newusername" class="w3-input w3-border" />
+				</p>
+				<p>
+					<label for="publickey">Enter the RSA <em>public key</em> (as PEM)
+						associated with the new account
+					</label>
+				</p>
+				<div class="w3-card-4">
+					<p>An RSA key pair can be generated, for example, with the
+						following commands on a linux shell:</p>
+					<pre>
+<code> openssl genrsa -out private.pem 2048</code>
+<code> openssl rsa -in private.pem -outform PEM -pubout -out public.pem</code>
+						</pre>
+					<p>
+						The public and private keys, encoded in PEM format, will be on the
+						files
+						<code>private.pem</code>
+						and
+						<code>public.pem</code>
+						,respectively.
+					</p>
+				</div>
+				<p>
+					<textarea placeholder="Put your public key pem here"
+						name="publickey" class="w3-input w3-border" rows="10"></textarea>
+				</p>
 				<p>
 					<strong>About cookies</strong> - starting the account creation you
 					will access site pages which use session cookies for captcha. <input
