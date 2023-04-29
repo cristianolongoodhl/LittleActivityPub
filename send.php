@@ -4,22 +4,18 @@ $inbox = $_POST['inbox'];
 $inboxURIComponents = parse_url($inbox);
 
 $inboxHost = $inboxURIComponents['host'];
-$inboxPath = $inboxURIComponents['path'];
 $activity = $_POST['activity'];
-$privatekey = $_POST['privatekey'];
+$privatekey = trim($_POST['privatekey']);
 
-$activityDigest = 'SHA-256=' . base64_encode(openssl_digest($activity, 'SHA256', true));
-$currentTime = new DateTime("now", new DateTimeZone('UTC'));
-$currentTimeStr = $currentTime->format(DateTimeInterface::RFC7231);
-$toBeSigned = "(request-target): post $inboxPath
-host: $inboxHost
-date: $currentTimeStr
-digest: $activityDigest";
+$digest=$_POST['digest'];
+$currentTimeStr = $_POST['date'];
+$toBeSigned = "date: $currentTimeStr
+digest: $digest";
 $signature='tobeinitialized';
 openssl_sign($toBeSigned, $signature, $privatekey, OPENSSL_ALGO_SHA256);
 
-$sigHeader = 'keyId="'.$sender.'#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest",signature="' . base64_encode($signature) . '"';
-$headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $activityDigest, 'Signature: ' . $sigHeader, 'Content-Type: application/activity+json'];
+$sigHeader = 'keyId="'.$sender.'#main-key",algorithm="rsa-sha256",headers="date digest",signature="' . base64_encode($signature) . '"';
+$headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $digest, 'Signature: ' . $sigHeader, 'Content-Type: application/activity+json'];
 
 ?>
 
@@ -40,7 +36,9 @@ $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $act
 			</div>
 			<div class="w3-container">
 				<h3>Activity</h3>
-<pre class="w3-card-4"><code><?=$activity?></code></pre>
+<pre class="w3-card-4"><code><?php 
+echo json_encode(json_decode($activity), JSON_PRETTY_PRINT);
+?></code></pre>
 				<h3>Signature header string</h3>
 <pre class="w3-card-4"><code><?=$toBeSigned?></code></pre>
 				<h3>Headers</h3>
