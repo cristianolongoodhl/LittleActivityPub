@@ -5,15 +5,26 @@ $inboxURIComponents = parse_url($inbox);
 
 $inboxHost = $inboxURIComponents['host'];
 $activity = $_POST['activity'];
-$privatekey = trim($_POST['privatekey']);
+$privatekey = trim($_POST['privateKey']);
 
 $digest=$_POST['digest'];
 $currentTimeStr = $_POST['date'];
-$toBeSigned = "date: $currentTimeStr
-digest: $digest";
+$signatureReceivedBase64=$_POST['signature'];
+$toBeSigned = "date: $currentTimeStr\ndigest: $digest";
+$toBeSignedReceived=$_POST['toBeSigned'];
 $signature='tobeinitialized';
 openssl_sign($toBeSigned, $signature, $privatekey, OPENSSL_ALGO_SHA256);
 
+$publicKey="-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxspIEsiZvpeEepTF6vNl
+UHuvJc2dO178DRu/Ug4d2pLF+NWW87CKJL8PKRMnZ4rxdbmyGjcgKWQ24+uRcnrr
+SEj/4X23uT+LzRxccRllxerz0j5vr5z+2GLXFUA+Y4Gc36W1fL89B0Wexwxp14pr
+1soy+YVWqVrjWR6liRmWzvMGeS9m1+FCPs4zuYk4Wy7n2rI45lRQgmeyYUcY0bMd
+4UF9kKhJwX17+1/aKT89oATyzsjj5BUpzwvL6JcvY/lUqyMXCSsok9fVY/PW1RCS
+2mLtriXnzQp5CYqIN0gK03c5593rjaL3vg3bZ1MiARrLQ3uvhQCvN8livBu4pfjj
+bQIDAQAB
+-----END PUBLIC KEY-----";
+$verified = openssl_verify($toBeSigned, $signature, $publicKey, OPENSSL_ALGO_SHA256);
 $sigHeader = 'keyId="'.$sender.'#main-key",algorithm="rsa-sha256",headers="date digest",signature="' . base64_encode($signature) . '"';
 $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $digest, 'Signature: ' . $sigHeader, 'Content-Type: application/activity+json'];
 
@@ -37,8 +48,15 @@ $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $dig
 			<div class="w3-container">
 				<h3>Activity</h3>
 <pre class="w3-card-4"><code><?php 
-echo json_encode(json_decode($activity), JSON_PRETTY_PRINT);
+echo json_encode(json_decode($activity), JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 ?></code></pre>
+<h3>To be signed</h3>
+<pre><?=$toBeSignedReceived?></pre>
+<p>Is as expected?<?php echo strcmp($toBeSigned,$toBeSignedReceived)==0 ? 'yes':'no';?></p>
+				<h3>Received signature</h3>
+<pre class="w3-card-4"><code>Expected <?php echo base64_encode($signature); ?></code></pre>
+<pre class="w3-card-4"><code>Actual <?php echo $signatureReceivedBase64;?></code></pre>
+<pre class="w3-card-4"><code>Verified <?php if ($verified) echo 'Yes'; else echo 'No';?></code></pre>
 				<h3>Signature header string</h3>
 <pre class="w3-card-4"><code><?=$toBeSigned?></code></pre>
 				<h3>Headers</h3>
