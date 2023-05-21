@@ -1,5 +1,6 @@
 <?php
 $sender=$_POST['sender'];
+$senderKey=$_POST['senderKey'];
 $inbox = $_POST['inbox'];
 $inboxURIComponents = parse_url($inbox);
 
@@ -11,17 +12,9 @@ $currentTimeStr = $_POST['date'];
 $signatureReceivedBase64=$_POST['signature'];
 $toBeSigned = "date: $currentTimeStr\ndigest: $digest";
 
-$publicKey="-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxspIEsiZvpeEepTF6vNl
-UHuvJc2dO178DRu/Ug4d2pLF+NWW87CKJL8PKRMnZ4rxdbmyGjcgKWQ24+uRcnrr
-SEj/4X23uT+LzRxccRllxerz0j5vr5z+2GLXFUA+Y4Gc36W1fL89B0Wexwxp14pr
-1soy+YVWqVrjWR6liRmWzvMGeS9m1+FCPs4zuYk4Wy7n2rI45lRQgmeyYUcY0bMd
-4UF9kKhJwX17+1/aKT89oATyzsjj5BUpzwvL6JcvY/lUqyMXCSsok9fVY/PW1RCS
-2mLtriXnzQp5CYqIN0gK03c5593rjaL3vg3bZ1MiARrLQ3uvhQCvN8livBu4pfjj
-bQIDAQAB
------END PUBLIC KEY-----";
-$verified = openssl_verify($toBeSigned, base64_decode($signatureReceivedBase64), $publicKey, OPENSSL_ALGO_SHA256);
-$sigHeader = 'keyId="'.$sender.'#main-key",algorithm="rsa-sha256",headers="date digest",signature="' . $signatureReceivedBase64 . '"';
+//$verified = openssl_verify($toBeSigned, base64_decode($signatureReceivedBase64), $publicKey, OPENSSL_ALGO_SHA256);
+$verified=false;
+$sigHeader = 'keyId="'.$senderKey.'",algorithm="rsa-sha256",headers="date digest",signature="' . $signatureReceivedBase64 . '"';
 $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $digest, 'Signature: ' . $sigHeader, 'Content-Type: application/activity+json'];
 
 ?>

@@ -22,16 +22,18 @@ function createActorIfNotExists($username, $publickey){
 	$file=fopen('users/'.$username.'.json','x');
 	if ($file==false) return false;
 
+	//18 is the lenght of create-account.php
+	//TODO move into a shared utilities file
 	$baseURI=(empty($_SERVER['HTTPS']) ? 'http' : 'https').'://'.$_SERVER['SERVER_NAME'].(substr($_SERVER['REQUEST_URI'],0,strlen($_SERVER['REQUEST_URI'])-18));
-	
+		
 	$actor=new stdClass();
 	$actor->{"@context"}=array("https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1");
 	$actor->id=$baseURI.'users/'.$username.'.json';
 	$actor->preferredUsername=$username;	
-	$actor->publicKey=new stdClass();
-	$actor->publicKey->id=$actor->id.'#main-key';
-	$actor->publicKey->owner=$actor->id;
-	$actor->publicKey->publicKeyPem=$publickey;
+	$actor->key=new stdClass();
+	$actor->key->id=$baseURI.'users/'.$username.'-key.json';
+	$actor->key->owner=$actor->id;
+	$actor->key->publicKeyPem=$publickey;
 	$actor->inbox=$baseURI.'inbox.php?user='.$username;	
 	$actor->outbox=$baseURI.'outbox.php?user='.$username;
 	
@@ -39,6 +41,17 @@ function createActorIfNotExists($username, $publickey){
 	fwrite($file, $actorJSON);
 	fflush($file);
 	fclose($file);
+	
+	//key is provided in its own file, so that it can be retrieved for HTTP Message Signature verification
+// 	$actor->key->{"@context"}="https://w3id.org/security/v1";
+// 	$keyJSON=json_encode($actor->key, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+	
+// 	//here we are assuming that such a key file not exists, as it refers to a new user
+// 	$keyfile=fopen('users/'.$username.'-key.json','x');
+// 	fwrite($keyfile, $keyJSON);
+// 	fflush($keyfile);
+// 	fclose($keyfile);
+	
 	return $actor;
 }
 session_start();
