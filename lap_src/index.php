@@ -1,21 +1,13 @@
 <?php
-
-function ensureUsersDirectoryExists()
-{
-	if (!file_exists('users')) {
-		mkdir('users', 0755, true);
-	}
-}
-
 /**
  * Get all usernames of existing accounts 
- * 
  * @return string[] the array of all usernames, if any. False, otherwise.
  */
 function getAllUserNames()
 {
-	$usernames = array();
-	$files = scandir('users');
+	if (!file_exists('../lap_users')) 
+		return false;
+	$files = scandir('../lap_users');
 	$n = 0;
 	foreach ($files as $file)
 		if (str_ends_with($file, '.json')) 
@@ -102,7 +94,6 @@ function getAllUserNames()
 	</div>
 
 <?php
-ensureUsersDirectoryExists();
 $usernames = getAllUserNames();
 if ($usernames) {
 	?>
