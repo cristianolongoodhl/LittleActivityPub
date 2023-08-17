@@ -105,7 +105,7 @@ if ($usernames) {
 			<ul>
 <?php
 	foreach ($usernames as $username)
-		print('<li>' . $username . '</li>');
+		print('<li><a href="account.php?username='.$username.'">' . $username . '</a></li>');
 	?>		
 		</ul>
 		</div>

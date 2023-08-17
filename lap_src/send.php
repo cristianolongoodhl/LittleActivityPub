@@ -1,19 +1,29 @@
 <?php
-$sender=$_POST['sender'];
-$senderKey=$_POST['senderKey'];
+
+$activityAsStr=$_POST['activity'];
+$activityAsJSON=json_decode($activityAsStr, false);
+
+if (!(isset($activityAsJSON->actor))){
+	print "Actor missing";
+	exit();
+}
+
+$sender=$activityAsJSON->actor;
+$actor=json_decode(file_get_contents($sender), false);
+//$senderKey=$_POST['senderKey'];
+$senderKey=$actor->{"publicKey"}->{"id"};
+
 $inbox = $_POST['inbox'];
 $inboxURIComponents = parse_url($inbox);
 
 $inboxHost = $inboxURIComponents['host'];
-$activity = $_POST['activity'];
 
 $digest=$_POST['digest'];
 $currentTimeStr = $_POST['date'];
 $signatureReceivedBase64=$_POST['signature'];
 $toBeSigned = "date: $currentTimeStr\ndigest: $digest";
 
-//$verified = openssl_verify($toBeSigned, base64_decode($signatureReceivedBase64), $publicKey, OPENSSL_ALGO_SHA256);
-$verified=false;
+$verified = openssl_verify($toBeSigned, base64_decode($signatureReceivedBase64), $actor->publicKey->publicKeyPem, OPENSSL_ALGO_SHA256);
 $sigHeader = 'keyId="'.$senderKey.'",algorithm="rsa-sha256",headers="date digest",signature="' . $signatureReceivedBase64 . '"';
 $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $digest, 'Signature: ' . $sigHeader, 'Content-Type: application/activity+json'];
 
@@ -37,7 +47,7 @@ $headers = ['Host: ' . $inboxHost, 'Date: ' . $currentTimeStr, 'Digest: ' . $dig
 			<div class="w3-container">
 				<h3>Activity</h3>
 <pre class="w3-card-4"><code><?php 
-echo json_encode(json_decode($activity), JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+echo json_encode(json_decode($activityAsStr), JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 ?></code></pre>
 <h3>To be signed</h3>
 <pre><?=$toBeSigned?></pre>
@@ -65,7 +75,7 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $inbox);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, $activity);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $activityAsStr);
 curl_setopt($ch, CURLOPT_HEADER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_VERBOSE, true);
