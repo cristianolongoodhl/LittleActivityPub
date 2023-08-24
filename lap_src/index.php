@@ -30,7 +30,7 @@ function getAllUserNames()
 	<h1>Just a Little Activity Pub Server</h1>
 	<div class="w3-container w3-card-4">
 		<p>
-			This is a minimal and incomplete implementation of the server part of
+			This server is a partial implementation of the server part of
 			the <a href="https://www.w3.org/TR/activitypub/">ActivityPub</a>
 			protocol, intended for didactic purposes.
 		</p>
@@ -44,6 +44,24 @@ function getAllUserNames()
 		</p>
 	</div>
 
+	<div class="w3-card-4">
+		<div class="w3-container w3-teal">
+			<h2>Retrieve ActivityStream object</h2>
+		</div>
+		<div class="w3-container" id="retrieve-activity-stream-object">
+		<p>Retrieve from the internet by URI an object in the ActivityStream format (media type <code>application/activity+json</code>). 
+		<form action="retrieve-activity-stream-object.php" method="POST">
+				<p>
+					<label for="objecturl">URI</label>
+					<input type="url" name="objecturl" class="w3-input w3-border" placeholder="https://mastodon.bida.im/users/aaronwinstonsmith" required/>
+				</p>
+				<p>
+					<input type="submit" name="retrieve" value="Retrieve" class="w3-btn w3-teal " />
+				</p>
+		</form>
+		
+		</div>
+	</div>
 	<div class="w3-card-4">
 		<div class="w3-container w3-teal">
 			<h2>Create a new account</h2>
