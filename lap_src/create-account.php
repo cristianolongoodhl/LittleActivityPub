@@ -11,36 +11,54 @@
 	<h1>Just a Little Activity Pub Server - Create a New Account</h1>
 
 <?php
-
+require_once 'conf.php';
 /**
+ * Create the directory where all the actor related files will be placed
+ * 
  * @param string $username
+ * @return boolean true if success, false if an actor with the same username already exists
+ */
+function createActorDirectoryIfNotExists($username){
+	$userdir=LAP_USERS_DIR_PATH.$username.'/';
+	if (is_dir($userdir))
+		return false;
+	
+	if (file_exists($userdir)){
+		print 'A file '.$userdir.' already exists';
+		exit();
+	}
+	if (!mkdir($userdir)){
+		print 'Unable to create directory '.$userdir;
+		exit();
+	}
+	return true;
+}
+/**
+ * Create the json file representing the actor
  * @param string $publickey
  * 
- * @return Object|boolean json object representing the actor profile if a new account is created, false otherwise 
- * TODO syncronized
+ * @return Object the json object representing the actor profile
  */
-function createActorIfNotExists($username, $publickey){
-	if (!file_exists('../lap_users'))
-		mkdir('../lap_users', 0755, true);
-	
-	$file=fopen('../lap_users/'.$username.'.json','x');
-	if ($file==false) return false;
-
-	//26 is the lenght of lap_src/create-account.php
-	//TODO move into a shared utilities file
-	$baseURI=(empty($_SERVER['HTTPS']) ? 'http' : 'https').'://'.$_SERVER['SERVER_NAME'].(substr($_SERVER['REQUEST_URI'],0,strlen($_SERVER['REQUEST_URI'])-26));
+function createActor($username, $publickey){
+	$userdir=LAP_USERS_DIR_PATH.$username.'/';
+		
+	$file=fopen($userdir.'actor.json','x');
+	if ($file==false){
+		print 'Unable to create file '.$userdir.'actor.json';
+		exit();
+	}
 		
 	$actor=new stdClass();
 	$actor->{"@context"}=array("https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1");
-	$actor->id=$baseURI.'lap_users/'.$username.'.json';
+	$actor->id=LAP_USERS_DIR_URI.$username.'/actor.json';
 	$actor->type='Person';
 	$actor->preferredUsername=$username;	
 	$actor->publicKey=new stdClass();
-	$actor->publicKey->id=$baseURI.'lap_users/'.$username.'.json#main-key';
+	$actor->publicKey->id=$actor->id.'#main-key';
 	$actor->publicKey->owner=$actor->id;
 	$actor->publicKey->publicKeyPem=$publickey;
-	$actor->inbox=$baseURI.'inbox.php?user='.$username;	
-	//$actor->outbox=$baseURI.'outbox.php?user='.$username;
+	$actor->inbox=LAP_SRC_DIR_URI.'inbox.php?username='.$username;	
+	$actor->outbox=LAP_SRC_DIR_URI.'/outbox.php?username='.$username;
 	
 	$actorJSON=json_encode($actor, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 	fwrite($file, $actorJSON);
@@ -48,6 +66,36 @@ function createActorIfNotExists($username, $publickey){
 	fclose($file);
 		
 	return $actor;
+}
+
+/**
+ * Create an empty inbox file for the specified actor
+ * @param string $username
+ * @return Object the json object representing the inbox
+ */
+function createEmptyInbox($username){
+	$userdir=LAP_USERS_DIR_PATH.$username.'/';
+	
+	$file=fopen($userdir.'inbox.json','x');
+	if ($file==false){
+		print 'Unable to create file '.$userdir.'inbox.json';
+		exit();
+	}
+	
+	$inbox=new stdClass();
+	$inbox->{"@context"}="https://www.w3.org/ns/activitystreams";
+	$inbox->id=LAP_SRC_DIR_URI.'inbox.php?username='.$username;
+	$inbox->type='OrderedCollection';
+	$inbox->totalItems=0;
+	$inbox->orderedItems=array();
+	
+	$inboxJSON=json_encode($inbox, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+	fwrite($file, $inboxJSON);
+	fflush($file);
+	fclose($file);
+	
+	return $inbox;
+	
 }
 session_start();
 if (!isset($_POST['newusername']) || !isset($_POST['publickey']) || !isset($_POST['captcha'])) die("wrong parameters");
@@ -65,7 +113,7 @@ if ($_SESSION['captcha'] != $_POST['captcha']) {
 		</div>
 	</div>
 <?php
-} else if (($actor=createActorIfNotExists($username, $publickey))==false){
+} else if (createActorDirectoryIfNotExists($username)===false){
 	?>
 	<div class="w3-card-4">
 		<div class="w3-container">
@@ -77,11 +125,8 @@ if ($_SESSION['captcha'] != $_POST['captcha']) {
 	</div>
 <?php
 } else {
-	$createActivity=new stdClass();
-	$createActivity->{'@context'}='https://www.w3.org/ns/activitystreams';
-	$createActivity->type='create';
-	$createActivity->actor=$actor->id;
-	
+	$actor=createActor($username, $publickey);
+	createEmptyInbox($username);
 ?> 
 	<div class="w3-card-4">
 		<div class="w3-container w3-teal">
@@ -89,13 +134,12 @@ if ($_SESSION['captcha'] != $_POST['captcha']) {
 		</div>
 		<div class="w3-container">
 		<p>The corresponding actor is <a href="<?=$actor->id?>"><?=$actor->id?></a>.</p>
-		<p>Notify all federated servers that this actor has been created.</p>
-		<blockquote>
+		<pre><code>
 <?php 
 print json_encode($actor, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 ?>
-		</blockquote>
-		<a href="index.php" class="w3-btn w3-teal">Back</a>
+		</code></pre>
+		<a href="index.php#actor<?=$username?>" class="w3-btn w3-teal">Back</a>
 		</div>
 	</div>
 <?php 	

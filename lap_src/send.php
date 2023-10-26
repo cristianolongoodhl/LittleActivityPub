@@ -1,5 +1,6 @@
 <?php
 
+$username=$_POST['username'];
 $activityAsStr=$_POST['activity'];
 $activityAsJSON=json_decode($activityAsStr, false);
 
@@ -10,8 +11,16 @@ if (!(isset($activityAsJSON->actor))){
 
 $sender=$activityAsJSON->actor;
 $actor=json_decode(file_get_contents($sender), false);
+if (!(isset($activityAsJSON->actor))){
+	print 'Unable to retrieve sender actor '.$sender;
+	exit();
+}
 //$senderKey=$_POST['senderKey'];
 $senderKey=$actor->{"publicKey"}->{"id"};
+if (!(isset($senderKey))){
+	print 'Unable to retrieve sender actor key id '.$sender;
+	exit();
+}
 
 $inbox = $_POST['inbox'];
 $inboxURIComponents = parse_url($inbox);
@@ -89,6 +98,7 @@ else
 	echo "<p>Curl result <sample>$result</sample></p>";
 ?>
 			</div>
+		<p><a class="w3-btn w3-teal" href="index.php#actor<?=$username?>">Back</a></p>	
 	</div>
 </body>
 </html>
