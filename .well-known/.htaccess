@@ -1,0 +1,3 @@
+Options FollowSymLinks
+RewriteEngine On
+RewriteRule "webfinger" "../lap_src/webfinger.php" [QSA]
