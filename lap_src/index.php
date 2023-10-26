@@ -92,7 +92,7 @@ function convertPubKToPem(keyPair){
     ).then((exported) => {
     	const exportedAsString = String.fromCharCode.apply(null, new Uint8Array(exported)); //array buffer to string
 	    const exportedAsBase64 = window.btoa(exportedAsString);
-    	return `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PRIVATE KEY-----`;    	
+    	return `-----BEGIN PUBLIC KEY-----\n${exportedAsBase64}\n-----END PUBLIC KEY-----`;    	
     });
 }
 

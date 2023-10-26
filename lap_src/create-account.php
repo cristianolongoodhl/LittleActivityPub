@@ -58,7 +58,7 @@ function createActor($username, $publickey){
 	$actor->publicKey->owner=$actor->id;
 	$actor->publicKey->publicKeyPem=$publickey;
 	$actor->inbox=LAP_SRC_DIR_URI.'inbox.php?username='.$username;	
-	$actor->outbox=LAP_SRC_DIR_URI.'/outbox.php?username='.$username;
+	$actor->outbox=LAP_SRC_DIR_URI.'outbox.php?username='.$username;
 	
 	$actorJSON=json_encode($actor, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
 	fwrite($file, $actorJSON);
@@ -98,16 +98,29 @@ function createEmptyInbox($username){
 	
 }
 session_start();
-if (!isset($_POST['newusername']) || !isset($_POST['publickey']) || !isset($_POST['captcha'])) die("wrong parameters");
+if (!isset($_POST['newusername']) || !isset($_POST['publickey']) || !isset($_POST['captcha']) || !isset($_POST['signature'])) die("wrong parameters");
 $username=$_POST['newusername'];
 $publickey=$_POST['publickey'];
-if ($_SESSION['captcha'] != $_POST['captcha']) {
+$signature=$_POST['signature'];
+$captcha=$_POST['captcha'];
+if ($_SESSION['captcha'] != $captcha) {
 	session_destroy();
 	?>
 	<div class="w3-card-4">
 		<div class="w3-container">
 			<p>
 				Captcha validation failed: the text you enterend is wrong. <a
+					href="index.php" class="w3-btn w3-teal">Back</a>
+			</p>
+		</div>
+	</div>
+<?php
+} else if (openssl_verify($captcha, $signature, $publickey, OPENSSL_ALGO_SHA256)){
+?>	
+	<div class="w3-card-4">
+		<div class="w3-container">
+			<p>
+				Signature verification failed.<a
 					href="index.php" class="w3-btn w3-teal">Back</a>
 			</p>
 		</div>
