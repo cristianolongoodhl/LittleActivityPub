@@ -18,7 +18,12 @@ if (!isset($requestHeaders['Signature'])){
 	print 'Signature header required';
 	exit(400);
 }
-$signature=$requestHeaders['Signature'];
+$signatureHeader=$requestHeaders['Signature'];
+$r=array();
+preg_match('/keyId="(.*?)"/', $signatureHeader, $r);
+$signatureKeyId=$r[1];
+preg_match('/signature="(.*?)"/', $signatureHeader, $r);
+$signature=$r[1];
 
 //body of the post request
 $requestBody=file_get_contents('php://input');
@@ -45,21 +50,14 @@ $actor=json_decode($actorStr);
 
 
 //check signature
-$signatureHeaderParts=array();
-parse_str(str_replace(',', '&', $signature), $signatureHeaderParts);
-foreach($signatureHeaderParts as $k => $v){
-	//remove double quotes
-	$v1=substr($v, 1, strlen($v)-2);
-	$signatureHeaderParts[$k]=$v1;
-}
-if (strcmp($actor->id, $signatureHeaderParts['keyId'])!=0){
-	print 'Signature keyId '.$signatureHeaderParts['keyId'].' differs from actor';
+if (strcmp($actor->id, $signatureKeyId)!=0){
+	print 'Signature keyId '.$signatureKeyId.' differs from actor';
 	exit(401);
 }
-$signatureVerification=openssl_verify("date: $date\ndigest: $digest", base64_decode($signatureHeaderParts['signature']),
+$signatureVerification=openssl_verify("date: $date\ndigest: $digest", base64_decode($signature),
 	$actor->publicKey->publicKeyPem, OPENSSL_ALGO_SHA256);
 if ($signatureVerification==0){
-	print 'Signature verification failed '.$signatureHeaderParts['signature'];
+	print 'Signature verification failed '.$signature;
 	exit(401);
 } else if ($signatureVerification==-1 || $signatureVerification==false){
 	print 'Unable to verify signature';
