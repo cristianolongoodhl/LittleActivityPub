@@ -5,7 +5,7 @@ $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $_POST['objecturl']);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLINFO_HEADER_OUT, true); // enable tracking
-curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/activity+json'));
+curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams'));
 
 $responseHeaders = '';
 curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
