@@ -21,7 +21,7 @@ function postActivityPromise(activity, date, digest, signature, outbox){
 		body: activity,
 		headers: {
 			"Content-type": "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"",
-			"X-OpenDataHacklab-activitydate": date,
+			"X-Opendatahacklab-Activitydate": date,
 			"Digest": digest,
 			"Signature": signature
 		}

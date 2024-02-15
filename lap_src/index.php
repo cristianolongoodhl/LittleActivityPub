@@ -204,7 +204,8 @@ foreach ($usernames as $username){
 	print('<li>Actor <a target="_blank" href="'.$actor.'">'.$actor.'</a></li>');
 	$inbox=LAP_SRC_DIR_URI.'inbox.php?username='.$username;	
 	print('<li>Inbox provided by this server <!-- (may differ from those provided in the actor description)--> <a target="_blank" href="'.$inbox.'">'.$inbox.'</a></li>');
-	print('<li><a href="sendActivityForm.php?username='.$username.'" class="w3-btn w3-teal">Send an activity</a></li>'); 
+	print('<li>Send an activity <a href="sendActivityForm.php?username='.$username.'" class="w3-btn w3-teal" title="send an activity to a specified target">to target</a>'.
+		' <a href="sendActivityFormFullJS.php?username='.$username.'" class="w3-btn w3-teal" title="send an activity to all the actors in its audience">to audience</a></li>'); 
 	print '</ul>';}
 	?>		
 		</div>

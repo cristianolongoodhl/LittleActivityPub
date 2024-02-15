@@ -12,7 +12,10 @@ function getHeaderOrDie(string $headerName){
 	$requestHeaders=getAllHeaders();
 	if (isset($requestHeaders[$headerName]))
 		return $requestHeaders[$headerName];
-	print $headerName.' header required';
+	print $headerName.' header required'.PHP_EOL;
+	print 'Received headers :';
+	foreach($requestHeaders as $k=>$v)
+		print $k.' ';	
 	exit(400);
 }
 
@@ -93,6 +96,103 @@ function verifySignatureOrDie(string $signatureHeader, object $actor, string $da
 	}
 }
 
+/**
+ * Retrieve the inbox to be used to send an activity to an actor. Precedence is given to shared inboxes
+ * @param $actorURI object description 
+ * @return string|NULL the inbox, if any. Null otherwise 
+ */
+function retrieveInbox(string $actorURI){
+	$ch=curl_init();
+	
+	curl_setopt($ch, CURLOPT_URL, $actorURI);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLINFO_HEADER_OUT, true); // enable tracking
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/ld+json; profile="https://www.w3.org/ns/activitystreams'));
+	curl_setopt($ch, CURLOPT_FAILONERROR, true);
+	
+	$result = curl_exec($ch);
+	if(curl_error($ch)) {
+		print 'Unable to fetch '.$actorURI." . Error: ".curl_errno($ch).PHP_EOL;
+		curl_close($ch);
+		return null;
+	}
+	curl_close($ch);
+	
+	$actor=json_decode($result);
+	if (isset($actor->endpoints) && isset($actor->endpoints->sharedInbox))
+		return $actor->endpoints->sharedInbox;
+	if (isset($actor->inbox))
+		return $actor->inbox;
+	
+	print 'No inbox defined for '.$actorURI.PHP_EOL;
+	return null;
+}
+
+/**
+ * Put all the inboxes of actors in the array into the $inboxes result parameter
+ * @param $inboxes
+ * @param $actorURIs 
+ */
+function retrieveAllInboxes(array &$inboxes, $actorURIOrArray){
+	$actorURIs=is_array($actorURIOrArray) ? $actorURIOrArray : array($actorURIOrArray);
+	foreach($actorURIs as $actorURI){
+		$inbox=retrieveInbox($actorURI);
+		if ($inbox!=null)
+			$inboxes[$inbox]=$actorURI;
+	}
+}
+
+/**
+ * Retrieve all the inboxes of agents in the audience target of an activity
+ * @param object $activity
+ * @return array target inboxes
+ */
+function retrieveTargetInboxes(object $activity){
+	$inboxes=array();
+	if (isset($activity->to))
+		retrieveAllInboxes($inboxes, $activity->to);
+	if (isset($activity->cc))
+		retrieveAllInboxes($inboxes, $activity->cc);
+	if (isset($activity->bto))
+		retrieveAllInboxes($inboxes, $activity->bto);
+	if (isset($activity->bcc))
+		retrieveAllInboxes($inboxes, $activity->bcc);
+	if (isset($activity->audience))
+		retrieveAllInboxes($inboxes, $activity->audience);
+	return array_keys($inboxes);						
+}
+
+
+/**
+ * Send a POST request to $targetURI with the specified headers and body
+ * 
+ * @param string $activityAsStr POST body
+ * @param string $date value for the date header
+ * @param string $digest value for the digest header
+ * @param string $signature value for the signature header
+ * @param string $inbox post request target
+ */
+function post(string $activityAsStr, string $date, string $digest, string $signatureHeader, string $inbox){
+	$inboxURIComponents = parse_url($inbox);	
+	$inboxHost = $inboxURIComponents['host'];
+	$headers = ['Host: ' . $inboxHost, 'Date: ' . $date, 'Digest: ' . $digest, 'Signature: ' . $signatureHeader, 		
+		'Content-Type: application/activity+json'];
+	
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $inbox);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_POST, true);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $activityAsStr);
+	curl_setopt($ch, CURLOPT_HEADER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	curl_setopt($ch, CURLOPT_VERBOSE, true);
+	
+	$result = curl_exec($ch);
+	$responseInfo = curl_getInfo($ch);
+	print 'Sending to '.$inbox.' Response status '.$responseInfo["http_code"].($result?'':curl_error($ch));
+	curl_close($ch);
+}
+
 //body of the post request
 $requestBody=file_get_contents('php://input');
 $digest=getDigestOrDie($requestBody);
@@ -103,28 +203,14 @@ if ($activity==null){
 	exit(400);
 }
 
-$date=getHeaderOrDie('X-OpenDataHacklab-activitydate');
+$date=getHeaderOrDie('X-Opendatahacklab-Activitydate');
 $signatureHeader=getHeaderOrDie('Signature');
-
 $actor=getLocalActorOrDie($activity->actor);
-
 verifySignatureOrDie($signatureHeader, $actor, $date, $digest);
-
-
 
 header('Access-Control-Allow-Origin: *');
 
-$f=fopen(LAP_USERS_DIR_PATH.'outbox.log','a+');
-
-fwrite($f,"HEADERS\n");
-foreach (getallheaders() as $name => $value) {
-	fwrite($f, "$name: $value\n");
-}
-fwrite($f,"BODY\n");
-$requestBody = file_get_contents('php://input');
-fwrite($f, "$requestBody \n");
-fflush($f);
-fclose($f);
-
-print 'ciao';
+$inboxes=retrieveTargetInboxes($activity);
+foreach ($inboxes as $inbox)
+	post($requestBody, $date, $digest, $signatureHeader, $inbox);
 ?>
