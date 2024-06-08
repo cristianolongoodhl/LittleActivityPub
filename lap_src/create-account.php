@@ -50,7 +50,7 @@ function createActor($username, $publickey){
 		
 	$actor=new stdClass();
 	$actor->{"@context"}=array("https://www.w3.org/ns/activitystreams", "https://w3id.org/security/v1");
-	$actor->id=LAP_USERS_DIR_URI.$username.'/actor.json';
+	$actor->id=LAP_SRC_DIR_URI.'actor.php?username='.urlencode($username);
 	$actor->type='Person';
 	$actor->preferredUsername=$username;	
 	$actor->publicKey=new stdClass();

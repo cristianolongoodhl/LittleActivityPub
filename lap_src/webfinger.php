@@ -36,7 +36,7 @@ $jrd->links=array($link);
 $link->rel='self';
 $link->type='application/activity+json';
 //31 is the size of lap_src/webfinger.php?resource=
-$link->href=LAP_USERS_DIR_URI.$username."/actor.json";
+$link->href=LAP_SRC_DIR_URI.'/actor.php?username='.urlencode($username);
 
 
 print json_encode($jrd, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);

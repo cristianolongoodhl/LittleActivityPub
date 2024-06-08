@@ -122,7 +122,7 @@ function convertPubKToPem(keyPair){
 			<h2 id="retrieve-activity-stream-object">Retrieve ActivityStream object</h2>
 		</div>
 		<div class="w3-container" id="retrieve-activity-stream-object">
-		<p>Retrieve from the internet by URI an object in the ActivityStream format (media type <code>application/ld+json; profile="https://www.w3.org/ns/activitystreams</code>). 
+		<p>Retrieve from the internet by URI an object in the ActivityStream format (media type <code>application/ld+json; profile="https://www.w3.org/ns/activitystreams"</code>). 
 		<form action="retrieve-activity-stream-object.php" method="POST">
 				<p>
 					<label for="objecturl">URI</label>

@@ -2,7 +2,7 @@
 require_once 'conf.php';
 
 $username=isset($_GET['username']) ? $_GET['username'] : 'username' ;
-$proposedActorURI=LAP_USERS_DIR_URI.$username.'/actor.json';
+$proposedActorURI=LAP_SRC_DIR_URI.'actor.php?username='.urlencode($username);
 $proposedActivityURI=LAP_USERS_DIR_URI.$username.'/activity/'.time();
 ?>
 <!DOCTYPE html>

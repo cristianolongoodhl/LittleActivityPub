@@ -42,13 +42,14 @@ function getDigestOrDie(string $requestBody){
  * @return Object an object representing the actor 
  */
 function getLocalActorOrDie(string $actorURI){
-	if (!str_starts_with($actorURI, LAP_USERS_DIR_URI)){
+	$prefix=LAP_SRC_DIR_URI.'actor.php?username=';
+	if (!str_starts_with($actorURI, $prefix)){
 		print 'Invalid actor '.$actorURI;
 		exit(401);
 	}
-	$actorpath=substr($actorURI, strlen(LAP_USERS_DIR_URI));
+	$username=urldecode(substr($actorURI, strlen($prefix)));
 	// get the actor object
-	$actorStr=file_get_contents(LAP_USERS_DIR_PATH.$actorpath);
+	$actorStr=file_get_contents(LAP_USERS_DIR_PATH.$username.'/actor.json');
 	if ($actorStr==false){
 		print 'No such actor '.$actorURI;
 		exit(401);
